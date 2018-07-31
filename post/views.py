@@ -1,19 +1,24 @@
-from django.shortcuts import render, redirect
-from post.models import Post
 from math import ceil
 
+from django.shortcuts import render, redirect
+
+from post.models import Post
+from post.helper import page_cache
+
+
+@page_cache
 def post_list(request):
-    page = int(request.GET.get('page',1)) # 当前页码
-    total = Post.objects.count()          # 帖子总数
-    per_page =4                         # 每业帖子数
-    pages = ceil(total / per_page)        # 总页数
+    page = int(request.GET.get('page', 1))  # 当前页码
+    total = Post.objects.count()            # 帖子总数
+    per_page = 10                           # 每页帖子数
+    pages = ceil(total / per_page)          # 总页数
 
     start = (page - 1) * per_page
     end = start + per_page
 
-    posts = Post.objects.all().order_by('-id')[start:end]
-
-    return render(request, 'post_list.html', {'posts':posts,'pages':range(pages)})
+    posts = Post.objects.all().order_by('-id')[start:end]  # 惰性加载 懒加载
+    return render(request, 'post_list.html',
+                  {'posts': posts, 'pages': range(pages)})
 
 
 def create_post(request):
@@ -39,6 +44,7 @@ def edit_post(request):
         return render(request, 'edit_post.html', {'post': post})
 
 
+@page_cache
 def read_post(request):
     post_id = int(request.GET.get('post_id'))
     post = Post.objects.get(id=post_id)
