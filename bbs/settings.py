@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+from urllib.parse import urlencode
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,23 +21,23 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '($cf0vp1w6xpu00%m^u6yrj1in(f33*exf20=qzrm!6q4+_qbf'
+SECRET_KEY = '^lvxu88)$&5*0ofha1ocq%1=nnmn&_==#l7^q**)v22nc7mmp-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.messages',
     'django.contrib.staticfiles',
+    'post',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -44,9 +45,6 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'bbs.urls'
@@ -60,8 +58,6 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
             ],
         },
     },
@@ -69,6 +65,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'bbs.wsgi.application'
 
+# 默认 Cache 配置
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
+#     }
+# }
+
+# 使用 reids 做缓存
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PICKLE_VERSION": -1,
+        }
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
@@ -80,6 +94,12 @@ DATABASES = {
     }
 }
 
+# Redis
+REDIS = {
+    'host': 'localhost',
+    'port': 6379,
+    'db': 1
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -103,7 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
-LANGUAGE_CODE = 'zh-hans'
+LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
@@ -117,4 +137,44 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/statics/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "statics"),
+]
+
+MEDIA_ROOT = 'medias'
+MEDIA_URL = '/medias/'
+
+
+# Weibo OAuth
+WB_APP_KEY = '1310374555'
+WB_APP_SECRET = 'e5cf3ddc50d77ba6f038013003c29550'
+WB_CALLBACK = 'http://seamile.org/weibo/callback/'
+
+# 第一步: 授权接口
+WB_AUTH_API = 'https://api.weibo.com/oauth2/authorize'
+WB_AUTH_ARGS = {
+    'client_id': WB_APP_KEY,
+    'redirect_uri': WB_CALLBACK,
+    'display': 'default',
+}
+WB_AUTH_URL = '%s?%s' % (WB_AUTH_API, urlencode(WB_AUTH_ARGS))
+
+
+# 第二步: 获取 token 接口
+WB_ACCESS_TOKEN_API = 'https://api.weibo.com/oauth2/access_token'
+WB_ACCESS_TOKEN_ARGS = {
+    'client_id': WB_APP_KEY,
+    'client_secret': WB_APP_SECRET,
+    'redirect_uri': WB_CALLBACK,
+    'grant_type': 'authorization_code',
+    'code': None,
+}
+
+
+# 第三步: 获取用户信息
+WB_USER_SHOW_API = 'https://api.weibo.com/2/users/show.json'
+WB_USER_SHOW_ARGS = {
+    'access_token': None,
+    'uid': None,
+}
