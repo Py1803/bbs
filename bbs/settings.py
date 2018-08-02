@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 Django settings for bbs project.
 
@@ -41,10 +42,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.security.SecurityMiddleware',        # | process_request   process_response ^
+    'django.contrib.sessions.middleware.SessionMiddleware', # | process_request   process_response |
+    'django.middleware.common.CommonMiddleware',            # | process_request   process_response |
+    'django.middleware.csrf.CsrfViewMiddleware',            # V process_request   process_response |
+    # 'common.middleware.BlockMiddleware',
 ]
 
 ROOT_URLCONF = 'bbs.urls'
@@ -83,6 +85,9 @@ CACHES = {
         }
     }
 }
+
+# Session 存储引擎
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
